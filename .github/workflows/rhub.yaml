@@ -10,12 +10,8 @@ on:
       inpcont:
         description: 'Check container'
         required: true
-        type: choice
-        options:
-        - 'valgrind'
-        - 'gcc-asan'
-        - 'clang-asan'
-        - 'clang-ubsan'
+        type: string
+        default: 'ubuntu-release'
 
 jobs:
   check:
