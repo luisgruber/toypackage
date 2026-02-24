@@ -7,7 +7,7 @@ on:
         description: 'Check container'
         required: true
         type: string
-        default: 'ubuntu-release'
+        default: 'clang-asan'
 
 jobs:
 
@@ -51,7 +51,43 @@ jobs:
         echo "CHECK_ARGS=$CHECK_ARGS" >> $GITHUB_ENV
 
     - name: Install dependencies and check package
-      run: r-check
+      run: |
+        do_check () {
+          pkg=${1}
+          echo Checking "$pkg"
+          cd `dirname $pkg`
+          R -q -e "pak::pkg_install('deps::$pkg', dependencies = TRUE)"
+          R CMD check $CHECK_ARGS $pkg
+          packagename=$(basename $pkg | sed "s/_.*$//")
+          cd ${packagename}.Rcheck
+          fail=false
+          exfile="${packagename}-Ex.Rout"
+          pattern='UndefinedBehaviorSanitizer\|AddressSanitizer'
+          if [ -f "${exfile}" ] && grep -q ${pattern} ${exfile}; then
+              fail=true
+              echo ----------------------------------------------------------
+              echo ${exfile}
+              echo ----------------------------------------------------------
+              cat ${exfile}
+              echo ----------------------------------------------------------
+          fi
+          testfiles=$(ls tests | grep ".Rout.fail$")
+          for f in $testfiles; do
+              if grep -q ${pattern} tests/$f; then
+                  fail=true
+                  echo ----------------------------------------------------------
+                  echo tests/${f}
+                  echo ----------------------------------------------------------
+                  cat tests/${f}
+                  echo ----------------------------------------------------------
+              fi
+          done
+          if [ "$fail" = "true" ]; then exit 1; fi
+        }
+
+        for pkg in `ls $checkdir/*.tar.gz`; do
+            do_check "$pkg"
+        done
       continue-on-error: true
 
     - name: Upload check result as artifact
