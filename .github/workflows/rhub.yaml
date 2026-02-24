@@ -25,6 +25,16 @@ jobs:
         mkdir /check
         curl -LO "${{ github.event.inputs.inpurl }}" --output-dir /check
 
+    - name: Manipulate CHECK_ARGS
+      run: |
+        if ! echo "$CHECK_ARGS" | grep -q -- --no-build-vignettes; then
+          CHECK_ARGS="$CHECK_ARGS --no-build-vignettes"
+        fi
+        if ! echo "$CHECK_ARGS" | grep -q -- --no-manual; then
+          CHECK_ARGS="$CHECK_ARGS --no-manual"
+        fi
+        echo "CHECK_ARGS=$CHECK_ARGS" >> $GITHUB_ENV
+
     - name: Install dependencies and check package
       run: r-check
 
