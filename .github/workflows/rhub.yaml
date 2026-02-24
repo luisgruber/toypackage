@@ -62,30 +62,33 @@ jobs:
           cd `dirname $pkg`
           R -q -e "pak::pkg_install('deps::$pkg', dependencies = TRUE)"
           R CMD check $CHECK_ARGS $pkg
-          packagename=$(basename $pkg | sed "s/_.*$//")
-          cd ${packagename}.Rcheck
+          packagename=$(basename "$pkg" | sed "s/_.*$//")
+          cd "${packagename}.Rcheck" || exit 1
           fail=false
           exfile="${packagename}-Ex.Rout"
           pattern='UndefinedBehaviorSanitizer\|AddressSanitizer'
-          if [ -f "${exfile}" ] && grep -q ${pattern} ${exfile}; then
+
+          if [ -f "${exfile}" ] && grep -q "${pattern}" "${exfile}"; then
               fail=true
               echo ----------------------------------------------------------
-              echo ${exfile}
+              echo "${exfile}"
               echo ----------------------------------------------------------
-              cat ${exfile}
+              cat "${exfile}"
               echo ----------------------------------------------------------
           fi
+
           testfiles=$(ls tests | grep ".Rout.fail$")
           for f in $testfiles; do
-              if grep -q ${pattern} tests/$f; then
+              if grep -q "${pattern}" "tests/${f}"; then
                   fail=true
                   echo ----------------------------------------------------------
-                  echo tests/${f}
+                  echo "tests/${f}"
                   echo ----------------------------------------------------------
-                  cat tests/${f}
+                  cat "tests/${f}"
                   echo ----------------------------------------------------------
               fi
           done
+
           if [ "$fail" = "true" ]; then exit 1; fi
         }
 
