@@ -63,7 +63,7 @@ jobs:
           R -q -e "pak::pkg_install('deps::$pkg', dependencies = TRUE)"
           R CMD check $CHECK_ARGS $pkg
           packagename=$(basename "$pkg" | sed "s/_.*$//")
-          cd "${packagename}.Rcheck" || exit 1
+          cd "${packagename}.Rcheck"
           fail=false
           exfile="${packagename}-Ex.Rout"
           pattern='UndefinedBehaviorSanitizer\|AddressSanitizer'
