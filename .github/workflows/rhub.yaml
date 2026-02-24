@@ -52,6 +52,10 @@ jobs:
 
     - name: Install dependencies and check package
       run: |
+        set -e
+
+        checkdir=${1-/check}
+
         do_check () {
           pkg=${1}
           echo Checking "$pkg"
