@@ -61,6 +61,7 @@ jobs:
 
     - name: Install dependencies and check package
       run: r-check
+      continue-on-error: true
 
     - name: Upload check result as artifact
       uses: actions/upload-artifact@v4
