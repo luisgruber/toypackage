@@ -16,7 +16,7 @@ jobs:
     container:
       image: ghcr.io/r-hub/containers/ubuntu-release:latest
     steps:
-
+      - uses: actions/checkout@v4
       - name: Build package
         run: R CMD build --no-manual .
 
