@@ -81,7 +81,7 @@ jobs:
         R CMD check $CHECK_ARGS $pkg
 
     - name: Check for ASAN and UBSAN issues
-      if: ${{ !cancelled() && (inputs.inpcont == "gcc-asan" || inputs.inpcont == "clang-asan" || inputs.inpcont == "clang-ubsan") }}
+      if: ${{ !cancelled() && (inputs.inpcont == 'gcc-asan' || inputs.inpcont == 'clang-asan' || inputs.inpcont == 'clang-ubsan') }}
       run: |
         writeLines("-- Checking for sanitizer errors ----------------------------------------")
         out <- dir("check", recursive=TRUE, pattern = "[.]Rout", full.names = TRUE)
@@ -102,7 +102,7 @@ jobs:
       shell: Rscript {0}
 
     - name: Check valgrind issues
-      if: ${{ !cancelled() && inputs.inpcont == "valgrind" }}
+      if: ${{ !cancelled() && inputs.inpcont == 'valgrind'}}
       run: |
         writeLines("-- Checking for valgrind errors -----------------------------------------")
         out <- dir("check", recursive=TRUE, pattern = "[.]Rout", full.names = TRUE)
