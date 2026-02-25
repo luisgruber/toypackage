@@ -57,7 +57,7 @@ jobs:
         l <- check_spl %in% CHECK_ARGS_spl
         CHECK_ARGS_spl <- c(check_spl[!l], CHECK_ARGS_spl)
         Sys.setenv(CHECK_ARGS = paste(CHECK_ARGS_spl, collapse = " "))
-        cat(paste("CHECK_ARGS=", Sys.getenv("CHECK_ARGS"), sep = ""), file = "./GITHUB_ENV", append = TRUE)
+        cat(paste("CHECK_ARGS=", Sys.getenv("CHECK_ARGS"), sep = ""), file = "/GITHUB_ENV", append = TRUE)
         cat(Sys.getenv("CHECK_ARGS"), "\n")
         # writeLines(paste("CHECK_ARGS=", CHECK_ARGS, sep = ""), con = "GITHUB_ENV", useBytes = TRUE)
       shell: Rscript {0}
