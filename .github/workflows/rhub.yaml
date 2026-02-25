@@ -85,16 +85,17 @@ jobs:
 
           echo a6
 
-          testfiles=$(ls tests | grep ".Rout.fail$")
-          echo a7
-          for f in $testfiles; do
-              if grep -q "${pattern}" "tests/${f}"; then
+          # List files with .Rout in the 'check' directory and its subdirectories
+          out=$(find . -type f -name "*.Rout" -o -name "*.Rout.*")
+          echo "$out"
+          fail=0
+
+          # Loop through each found file
+          for of in $out; do
+              # Read the lines of the file
+              if grep -q "${pattern}" "$of"; then
                   fail=true
-                  echo ----------------------------------------------------------
-                  echo "tests/${f}"
-                  echo ----------------------------------------------------------
-                  cat "tests/${f}"
-                  echo ----------------------------------------------------------
+                  break
               fi
           done
 
