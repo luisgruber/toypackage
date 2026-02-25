@@ -1,4 +1,4 @@
-name: Check any R package at an URL
+name: Check using r-hub containers
 
 on:
   workflow_dispatch:
@@ -68,11 +68,11 @@ jobs:
           cd "${packagename}.Rcheck"
           echo a3
           fail=false
-          echo a3
-          exfile="${packagename}-Ex.Rout"
           echo a4
-          pattern='UndefinedBehaviorSanitizer\|AddressSanitizer'
+          exfile="${packagename}-Ex.Rout"
           echo a5
+          pattern='UndefinedBehaviorSanitizer\|AddressSanitizer'
+          echo a6
 
           if [ -f "${exfile}" ] && grep -q "${pattern}" "${exfile}"; then
               fail=true
@@ -83,10 +83,11 @@ jobs:
               echo ----------------------------------------------------------
           fi
 
-          echo a6
+          echo a7
 
           # List files with .Rout in the 'check' directory and its subdirectories
           out=$(find . -type f -name "*.Rout" -o -name "*.Rout.*")
+          echo a8
           echo "$out"
           fail=0
 
@@ -99,10 +100,10 @@ jobs:
               fi
           done
 
-          echo a7
+          echo a9
 
           if [ "$fail" = "true" ]; then exit 1; fi
-          echo a8
+          echo a10
         }
 
         for pkg in `ls $checkdir/*.tar.gz`; do
