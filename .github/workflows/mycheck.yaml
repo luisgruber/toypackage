@@ -48,22 +48,6 @@ jobs:
         name: pkg
         path: /check
 
-    - name: CHECK_ARGS
-      run: |
-        CHECK_ARGS <- Sys.getenv("CHECK_ARGS")
-        CHECK_ARGS_spl <- strsplit(CHECK_ARGS, "\\s+")[[1]]
-        check <- Sys.getenv("check")
-        check_spl <- strsplit(check, "\\s+")[[1]]
-        l <- check_spl %in% CHECK_ARGS_spl
-        CHECK_ARGS_spl <- c(check_spl[!l], CHECK_ARGS_spl)
-        Sys.setenv(CHECK_ARGS = paste(CHECK_ARGS_spl, collapse = " "))
-        cat(paste("CHECK_ARGS=", Sys.getenv("CHECK_ARGS"), sep = ""), file = "/GITHUB_ENV", append = TRUE)
-        cat(Sys.getenv("CHECK_ARGS"), "\n")
-        writeLines(paste("CHECK_ARGS=", Sys.getenv("CHECK_ARGS"), sep = ""), con = "GITHUB_ENV", useBytes = TRUE)
-      shell: Rscript {0}
-      env:
-        check: ${{ inputs.check_args }}
-
     # - name: Manipulate CHECK_ARGS
     #   run: |
     #     if ! echo "$CHECK_ARGS" | grep -q -- --no-build-vignettes; then
@@ -77,12 +61,23 @@ jobs:
     - name: Install dependencies and check package
       if: ${{ !cancelled() }}
       run: |
+        R -e -q '
+          CHECK_ARGS <- Sys.getenv("CHECK_ARGS");
+          CHECK_ARGS_spl <- strsplit(CHECK_ARGS, "\\s+")[[1]];
+          check <- Sys.getenv("check");
+          check_spl <- strsplit(check, "\\s+")[[1]];
+          l <- check_spl %in% CHECK_ARGS_spl;
+          CHECK_ARGS_spl <- c(check_spl[!l], CHECK_ARGS_spl);
+          Sys.setenv(CHECK_ARGS = paste(CHECK_ARGS_spl, collapse = " "));
+          '
         echo "$CHECK_ARGS"
         pkg=$(ls /check/*.tar.gz)
         echo Checking "$pkg"
         cd `dirname $pkg`
         R -q -e "pak::pkg_install('deps::$pkg', dependencies = TRUE)"
         R CMD check $CHECK_ARGS $pkg
+      env:
+        check: ${{ inputs.check_args }}
 
     - name: Check for ASAN and UBSAN issues
       if: ${{ !cancelled() && (inputs.inpcont == 'gcc-asan' || inputs.inpcont == 'clang-asan' || inputs.inpcont == 'clang-ubsan') }}
