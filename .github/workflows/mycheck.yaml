@@ -58,7 +58,8 @@ jobs:
         CHECK_ARGS_spl <- c(check_spl[!l], CHECK_ARGS_spl)
         Sys.setenv(CHECK_ARGS = paste(CHECK_ARGS_spl, collapse = " "))
         # cat(paste("CHECK_ARGS=", CHECK_ARGS, sep = ""), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
-        writeLines(paste("CHECK_ARGS=", CHECK_ARGS, sep = ""), con = Sys.getenv("GITHUB_ENV"), useBytes = TRUE)
+        cat(Sys.getenv("CHECK_ARGS"), "\n")
+        writeLines(paste("CHECK_ARGS=", CHECK_ARGS, sep = ""), con = "GITHUB_ENV", useBytes = TRUE)
       shell: Rscript {0}
       env:
         check: ${{ inputs.check_args }}
