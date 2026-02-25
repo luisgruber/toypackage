@@ -61,15 +61,14 @@ jobs:
     - name: Install dependencies and check package
       if: ${{ !cancelled() }}
       run: |
-        R -e -q '
-          CHECK_ARGS <- Sys.getenv("CHECK_ARGS");
+        R -q -e 'CHECK_ARGS <- Sys.getenv("CHECK_ARGS");
           CHECK_ARGS_spl <- strsplit(CHECK_ARGS, "\\s+")[[1]];
           check <- Sys.getenv("check");
           check_spl <- strsplit(check, "\\s+")[[1]];
           l <- check_spl %in% CHECK_ARGS_spl;
           CHECK_ARGS_spl <- c(check_spl[!l], CHECK_ARGS_spl);
-          Sys.setenv(CHECK_ARGS = paste(CHECK_ARGS_spl, collapse = " "));
-          '
+          Sys.setenv(CHECK_ARGS = paste(CHECK_ARGS_spl, collapse = " "))'
+
         echo "$CHECK_ARGS"
         pkg=$(ls /check/*.tar.gz)
         echo Checking "$pkg"
