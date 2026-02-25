@@ -51,8 +51,8 @@ jobs:
     - name: CHECK_ARGS
       run: |
         CHECK_ARGS <- Sys.getenv("CHECK_ARGS")
-        CHECK_ARGS_spl <- strsplit(CHECK_ARGS)
-        check <- Sys.getenv("check", "\\s+")[[1]])
+        CHECK_ARGS_spl <- strsplit(CHECK_ARGS, "\\s+")[[1]]
+        check <- Sys.getenv("check")
         check_spl <- strsplit(check, "\\s+")[[1]]
         l <- check_spl %in% CHECK_ARGS_spl
         CHECK_ARGS_spl <- c(check_spl[!l], CHECK_ARGS_spl)
@@ -74,6 +74,7 @@ jobs:
 
     - name: Install dependencies and check package
       run: |
+        echo "$CHECK_ARGS"
         pkg=$(ls check/*.tar.gz)
         echo Checking "$pkg"
         cd `dirname $pkg`
