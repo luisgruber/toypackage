@@ -57,7 +57,8 @@ jobs:
         l <- check_spl %in% CHECK_ARGS_spl
         CHECK_ARGS_spl <- c(check_spl[!l], CHECK_ARGS_spl)
         Sys.setenv(CHECK_ARGS = paste(CHECK_ARGS_spl, collapse = " "))
-        cat(paste("CHECK_ARGS=", CHECK_ARGS, sep = ""), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+        # cat(paste("CHECK_ARGS=", CHECK_ARGS, sep = ""), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+        writeLines(paste("CHECK_ARGS=", CHECK_ARGS, sep = ""), con = Sys.getenv("GITHUB_ENV"), useBytes = TRUE)
       shell: Rscript {0}
       env:
         check: ${{ inputs.check_args }}
@@ -73,9 +74,10 @@ jobs:
     #     echo "CHECK_ARGS=$CHECK_ARGS" >> $GITHUB_ENV
 
     - name: Install dependencies and check package
+      if: ${{ !cancelled() }}
       run: |
         echo "$CHECK_ARGS"
-        pkg=$(ls check/*.tar.gz)
+        pkg=$(ls /check/*.tar.gz)
         echo Checking "$pkg"
         cd `dirname $pkg`
         R -q -e "pak::pkg_install('deps::$pkg', dependencies = TRUE)"
