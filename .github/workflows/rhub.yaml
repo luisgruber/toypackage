@@ -62,11 +62,17 @@ jobs:
           cd `dirname $pkg`
           R -q -e "pak::pkg_install('deps::$pkg', dependencies = TRUE)"
           R CMD check $CHECK_ARGS $pkg
+          echo a1
           packagename=$(basename "$pkg" | sed "s/_.*$//")
+          echo a2
           cd "${packagename}.Rcheck"
+          echo a3
           fail=false
+          echo a3
           exfile="${packagename}-Ex.Rout"
+          echo a4
           pattern='UndefinedBehaviorSanitizer\|AddressSanitizer'
+          echo a5
 
           if [ -f "${exfile}" ] && grep -q "${pattern}" "${exfile}"; then
               fail=true
@@ -77,7 +83,10 @@ jobs:
               echo ----------------------------------------------------------
           fi
 
+          echo a6
+
           testfiles=$(ls tests | grep ".Rout.fail$")
+          echo a7
           for f in $testfiles; do
               if grep -q "${pattern}" "tests/${f}"; then
                   fail=true
@@ -89,7 +98,10 @@ jobs:
               fi
           done
 
+          echo a7
+
           if [ "$fail" = "true" ]; then exit 1; fi
+          echo a8
         }
 
         for pkg in `ls $checkdir/*.tar.gz`; do
