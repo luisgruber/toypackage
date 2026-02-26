@@ -19,7 +19,6 @@ library(toypackage)
 ```
 
 ```{r}
-library(sanitizers)
-heapAddressSanitize()
+f(1,1)
 ```
 

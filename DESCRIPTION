@@ -12,6 +12,5 @@ URL: https://github.com/luisgruber/toypackage
 BugReports: https://github.com/luisgruber/toypackage/issues
 Suggests: 
     knitr,
-    rmarkdown,
-    sanitizers
+    rmarkdown
 VignetteBuilder: knitr

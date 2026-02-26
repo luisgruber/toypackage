@@ -9,7 +9,7 @@ on:
         type: string
         default: 'clang-asan'
       check_args:
-        description: 'additional options for R CMD check, which will be added to CHECK_ARGS (CHECK_ARGS already exists in the container)'
+        description: 'additional options for R CMD check, which will be added to CHECK_ARGS (CHECK_ARGS is an env variable of the r-hub container)'
         required: false
         type: string
         default: '--no-manual --no-build-vignettes'
@@ -49,25 +49,17 @@ jobs:
         name: pkg
         path: /check
 
-    # - name: Manipulate CHECK_ARGS
-    #   run: |
-    #     if ! echo "$CHECK_ARGS" | grep -q -- --no-build-vignettes; then
-    #       CHECK_ARGS="$CHECK_ARGS --no-build-vignettes"
-    #     fi
-    #     if ! echo "$CHECK_ARGS" | grep -q -- --no-manual; then
-    #       CHECK_ARGS="$CHECK_ARGS --no-manual"
-    #     fi
-    #     echo "CHECK_ARGS=$CHECK_ARGS" >> $GITHUB_ENV
-
     - name: Set CHECK_ARGS
       run: |
+        # CHECK_ARGS is an environment variable of the r-hub container
         CHECK_ARGS <- Sys.getenv("CHECK_ARGS")
         CHECK_ARGS_spl <- strsplit(CHECK_ARGS, "\\s+")[[1]]
-        check <- Sys.getenv("check"); check_spl <- strsplit(check, "\\s+")[[1]]
+        check <- Sys.getenv("check")
+        check_spl <- strsplit(check, "\\s+")[[1]]
         l <- check_spl %in% CHECK_ARGS_spl
         CHECK_ARGS_spl <- c(check_spl[!l], CHECK_ARGS_spl)
         CHECK_ARGS <- paste(CHECK_ARGS_spl, collapse = " ")
-        cat("\nCHECK_ARGS=", CHECK_ARGS, sep="",file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+        cat("\nCHECK_ARGS=", CHECK_ARGS, sep="", file = Sys.getenv("GITHUB_ENV"), append = TRUE)
       shell: Rscript {0}
       env:
         check: ${{ inputs.check_args }}
@@ -89,17 +81,18 @@ jobs:
       run: |
         writeLines("-- Checking for sanitizer errors ----------------------------------------")
         out <- dir("check", recursive=TRUE, pattern = "[.]Rout", full.names = TRUE)
+        cat("Files to check:",out, sep="\n")
         fail <- 0
         for (of in out) {
+          cat("Checking:", of)
           l <- readLines(of, warn = FALSE)
           if (any(grepl("UndefinedBehaviorSanitizer|AddressSanitizer", l, fixed = TRUE))) {
-            fail <- 1
-            break
+             fail <- 1
           }
           if (any(grepl("runtime error:", l, fixed = TRUE))) {
             fail <- 1
-            break
           }
+          if(fail) writeLines(l) else cat("✓\n")
         }
         writeLines("-------------------------------------------------------------------------")
         q(save = "no", status = fail)
@@ -110,13 +103,16 @@ jobs:
       run: |
         writeLines("-- Checking for valgrind errors -----------------------------------------")
         out <- dir("check", recursive=TRUE, pattern = "[.]Rout", full.names = TRUE)
+        cat("Files to check:",out, sep="\n")
         fail <- 0
         for (of in out) {
+          cat("Checking:", of)
           l <- readLines(of, warn = FALSE)
           if (any(grepl("==[0-9]+== ERROR SUMMARY: [1-9][0-9]* error", l))) {
             fail <- 1
-            writeLines(paste0("-- ", of))
             writeLines(l)
+          }else{
+            cat("✓\n")
           }
         }
         writeLines("-------------------------------------------------------------------------")
