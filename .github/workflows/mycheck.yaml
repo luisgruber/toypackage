@@ -9,7 +9,7 @@ on:
         type: string
         default: 'clang-asan'
       check_args:
-        description: 'additional options for R CMD check, which will be added to CHECK_ARGS (CHECK_ARGS is an env variable of the r-hub container)'
+        description: 'additional options for R CMD check, which will be added to CHECK_ARGS (CHECK_ARGS is an env variable of the r-hub container). null indicates no additional arguments will be added.'
         required: false
         type: string
         default: '--no-manual --no-build-vignettes'
@@ -50,7 +50,7 @@ jobs:
         path: /check
 
     - name: Set CHECK_ARGS
-      if: ${{ inputs.check_args != '' }}
+      if: ${{ inputs.check_args != 'null' }}
       run: |
         # CHECK_ARGS is an environment variable of the r-hub container
         CHECK_ARGS <- Sys.getenv("CHECK_ARGS")
@@ -74,8 +74,6 @@ jobs:
         cd `dirname $pkg`
         R -q -e "pak::pkg_install('deps::$pkg', dependencies = TRUE)"
         R CMD check $CHECK_ARGS $pkg
-      env:
-        check: ${{ inputs.check_args }}
 
     - name: Check for ASAN and UBSAN issues
       if: ${{ !cancelled() && (inputs.inpcont == 'gcc-asan' || inputs.inpcont == 'clang-asan' || inputs.inpcont == 'clang-ubsan') }}
