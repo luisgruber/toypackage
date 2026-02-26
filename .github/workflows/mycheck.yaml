@@ -80,7 +80,7 @@ jobs:
       if: ${{ !cancelled() && (inputs.inpcont == 'gcc-asan' || inputs.inpcont == 'clang-asan' || inputs.inpcont == 'clang-ubsan') }}
       run: |
         writeLines("-- Checking for sanitizer errors ----------------------------------------")
-        out <- dir("/check", recursive=TRUE, pattern = "[.]Rout", full.names = TRUE)
+        out <- dir("/check", recursive=TRUE, pattern = "[.]Rout|[.][A-Za-z]+[.]log$", full.names = TRUE)
         cat("Files to check:",out, sep="\n")
         fail <- 0
         for (of in out) {
@@ -102,7 +102,7 @@ jobs:
       if: ${{ !cancelled() && inputs.inpcont == 'valgrind'}}
       run: |
         writeLines("-- Checking for valgrind errors -----------------------------------------")
-        out <- dir("/check", recursive=TRUE, pattern = "[.]Rout", full.names = TRUE)
+        out <- dir("/check", recursive=TRUE, pattern = "[.]Rout|[.][A-Za-z]+[.]log$", full.names = TRUE)
         cat("Files to check:",out, sep="\n")
         fail <- 0
         for (of in out) {
@@ -125,3 +125,12 @@ jobs:
       with:
         name: check-results-${{ github.event.inputs.inpcont }}
         path: /check
+
+  delete-build-artifact:
+    needs: check
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: geekyeggo/delete-artifact@v5
+      with:
+        name: pkg
