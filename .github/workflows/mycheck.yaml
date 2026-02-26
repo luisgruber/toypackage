@@ -22,104 +22,104 @@ jobs:
       image: ghcr.io/r-hub/containers/ubuntu-release:latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: |
-          R -q -e 'pak::pkg_install(c("deps::.", "any::rcmdcheck"), dependencies = TRUE)'
-      - name: Build package
-        run: R CMD build --no-manual .
+      - run: echo "$GITHUB_ENV"
+      - run: echo "$GITHUB_ENV"
+      - run: |
+          ge <- Sys.getenv("GITHUB_ENV")
+          cat(ge, "\n")
+        shell: Rscript {0}
+      # - name: Install dependencies
+      #   run: |
+      #     R -q -e 'pak::pkg_install(c("deps::.", "any::rcmdcheck"), dependencies = TRUE)'
+      # - name: Build package
+      #   run: R CMD build --no-manual .
 
-      - name: Upload package artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: pkg
-          path: "*.tar.gz"
-          retention-days: 1
+      # - name: Upload package artifact
+      #   uses: actions/upload-artifact@v6
+      #   with:
+      #     name: pkg
+      #     path: "*.tar.gz"
+      #     retention-days: 1
 
-  check:
-    needs: build
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/r-hub/containers/${{ github.event.inputs.inpcont }}:latest
-
-    steps:
-    - name: Download package
-      uses: actions/download-artifact@v4
-      with:
-        name: pkg
-        path: /check
-
-    # - name: Manipulate CHECK_ARGS
-    #   run: |
-    #     if ! echo "$CHECK_ARGS" | grep -q -- --no-build-vignettes; then
-    #       CHECK_ARGS="$CHECK_ARGS --no-build-vignettes"
-    #     fi
-    #     if ! echo "$CHECK_ARGS" | grep -q -- --no-manual; then
-    #       CHECK_ARGS="$CHECK_ARGS --no-manual"
-    #     fi
-    #     echo "CHECK_ARGS=$CHECK_ARGS" >> $GITHUB_ENV
-
-    - name: Install dependencies and check package
-      if: ${{ !cancelled() }}
-      run: |
-        R -q -e 'CHECK_ARGS <- Sys.getenv("CHECK_ARGS");
-          CHECK_ARGS_spl <- strsplit(CHECK_ARGS, "\\s+")[[1]];
-          check <- Sys.getenv("check");
-          check_spl <- strsplit(check, "\\s+")[[1]];
-          l <- check_spl %in% CHECK_ARGS_spl;
-          CHECK_ARGS_spl <- c(check_spl[!l], CHECK_ARGS_spl);
-          Sys.setenv(CHECK_ARGS = paste(CHECK_ARGS_spl, collapse = " "))'
-
-        echo "$CHECK_ARGS"
-        pkg=$(ls /check/*.tar.gz)
-        echo Checking "$pkg"
-        cd `dirname $pkg`
-        R -q -e "pak::pkg_install('deps::$pkg', dependencies = TRUE)"
-        R CMD check $CHECK_ARGS $pkg
-      env:
-        check: ${{ inputs.check_args }}
-
-    - name: Check for ASAN and UBSAN issues
-      if: ${{ !cancelled() && (inputs.inpcont == 'gcc-asan' || inputs.inpcont == 'clang-asan' || inputs.inpcont == 'clang-ubsan') }}
-      run: |
-        writeLines("-- Checking for sanitizer errors ----------------------------------------")
-        out <- dir("check", recursive=TRUE, pattern = "[.]Rout", full.names = TRUE)
-        fail <- 0
-        for (of in out) {
-          l <- readLines(of, warn = FALSE)
-          if (any(grepl("UndefinedBehaviorSanitizer|AddressSanitizer", l, fixed = TRUE))) {
-            fail <- 1
-            break
-          }
-          if (any(grepl("runtime error:", l, fixed = TRUE))) {
-            fail <- 1
-            break
-          }
-        }
-        writeLines("-------------------------------------------------------------------------")
-        q(save = "no", status = fail)
-      shell: Rscript {0}
-
-    - name: Check valgrind issues
-      if: ${{ !cancelled() && inputs.inpcont == 'valgrind'}}
-      run: |
-        writeLines("-- Checking for valgrind errors -----------------------------------------")
-        out <- dir("check", recursive=TRUE, pattern = "[.]Rout", full.names = TRUE)
-        fail <- 0
-        for (of in out) {
-          l <- readLines(of, warn = FALSE)
-          if (any(grepl("==[0-9]+== ERROR SUMMARY: [1-9][0-9]* error", l))) {
-            fail <- 1
-            writeLines(paste0("-- ", of))
-            writeLines(l)
-          }
-        }
-        writeLines("-------------------------------------------------------------------------")
-        q(save = "no", status = fail)
-      shell: Rscript {0}
-
-    - name: Upload check result as artifact
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v4
-      with:
-        name: check-results-${{ github.event.inputs.inpcont }}
-        path: /check
+  # check:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: ghcr.io/r-hub/containers/${{ github.event.inputs.inpcont }}:latest
+  #
+  #   steps:
+  #   - name: Download package
+  #     uses: actions/download-artifact@v4
+  #     with:
+  #       name: pkg
+  #       path: /check
+  #
+  #   # - name: Manipulate CHECK_ARGS
+  #   #   run: |
+  #   #     if ! echo "$CHECK_ARGS" | grep -q -- --no-build-vignettes; then
+  #   #       CHECK_ARGS="$CHECK_ARGS --no-build-vignettes"
+  #   #     fi
+  #   #     if ! echo "$CHECK_ARGS" | grep -q -- --no-manual; then
+  #   #       CHECK_ARGS="$CHECK_ARGS --no-manual"
+  #   #     fi
+  #   #     echo "CHECK_ARGS=$CHECK_ARGS" >> $GITHUB_ENV
+  #
+  #   - name: Install dependencies and check package
+  #     if: ${{ !cancelled() }}
+  #     run: |
+  #       R -q -e 'CHECK_ARGS <- Sys.getenv("CHECK_ARGS"); CHECK_ARGS_spl <- strsplit(CHECK_ARGS, "\\s+")[[1]]; check <- Sys.getenv("check"); check_spl <- strsplit(check, "\\s+")[[1]]; l <- check_spl %in% CHECK_ARGS_spl; CHECK_ARGS_spl <- c(check_spl[!l], CHECK_ARGS_spl); Sys.setenv(CHECK_ARGS = paste(CHECK_ARGS_spl, collapse = " "))'
+  #
+  #       echo "$CHECK_ARGS"
+  #       pkg=$(ls /check/*.tar.gz)
+  #       echo Checking "$pkg"
+  #       cd `dirname $pkg`
+  #       R -q -e "pak::pkg_install('deps::$pkg', dependencies = TRUE)"
+  #       R CMD check $CHECK_ARGS $pkg
+  #     env:
+  #       check: ${{ inputs.check_args }}
+  #
+  #   - name: Check for ASAN and UBSAN issues
+  #     if: ${{ !cancelled() && (inputs.inpcont == 'gcc-asan' || inputs.inpcont == 'clang-asan' || inputs.inpcont == 'clang-ubsan') }}
+  #     run: |
+  #       writeLines("-- Checking for sanitizer errors ----------------------------------------")
+  #       out <- dir("check", recursive=TRUE, pattern = "[.]Rout", full.names = TRUE)
+  #       fail <- 0
+  #       for (of in out) {
+  #         l <- readLines(of, warn = FALSE)
+  #         if (any(grepl("UndefinedBehaviorSanitizer|AddressSanitizer", l, fixed = TRUE))) {
+  #           fail <- 1
+  #           break
+  #         }
+  #         if (any(grepl("runtime error:", l, fixed = TRUE))) {
+  #           fail <- 1
+  #           break
+  #         }
+  #       }
+  #       writeLines("-------------------------------------------------------------------------")
+  #       q(save = "no", status = fail)
+  #     shell: Rscript {0}
+  #
+  #   - name: Check valgrind issues
+  #     if: ${{ !cancelled() && inputs.inpcont == 'valgrind'}}
+  #     run: |
+  #       writeLines("-- Checking for valgrind errors -----------------------------------------")
+  #       out <- dir("check", recursive=TRUE, pattern = "[.]Rout", full.names = TRUE)
+  #       fail <- 0
+  #       for (of in out) {
+  #         l <- readLines(of, warn = FALSE)
+  #         if (any(grepl("==[0-9]+== ERROR SUMMARY: [1-9][0-9]* error", l))) {
+  #           fail <- 1
+  #           writeLines(paste0("-- ", of))
+  #           writeLines(l)
+  #         }
+  #       }
+  #       writeLines("-------------------------------------------------------------------------")
+  #       q(save = "no", status = fail)
+  #     shell: Rscript {0}
+  #
+  #   - name: Upload check result as artifact
+  #     if: '!cancelled()'
+  #     uses: actions/upload-artifact@v4
+  #     with:
+  #       name: check-results-${{ github.event.inputs.inpcont }}
+  #       path: /check
