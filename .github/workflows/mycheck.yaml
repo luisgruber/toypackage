@@ -50,6 +50,7 @@ jobs:
         path: /check
 
     - name: Set CHECK_ARGS
+      if: ${{ inputs.check_args != '' }}
       run: |
         # CHECK_ARGS is an environment variable of the r-hub container
         CHECK_ARGS <- Sys.getenv("CHECK_ARGS")
